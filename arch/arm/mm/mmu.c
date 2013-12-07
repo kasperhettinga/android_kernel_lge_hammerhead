@@ -911,7 +911,7 @@ static void __init pmd_empty_section_gap(unsigned long addr)
 	vm = early_alloc_aligned(sizeof(*vm), __alignof__(*vm));
 	vm->addr = (void *)addr;
 	vm->size = SECTION_SIZE;
-	vm->flags = VM_IOREMAP | VM_ARM_EMPTY_MAPPING;
+	vm->flags = VM_IOREMAP | VM_ARM_STATIC_MAPPING;
 	vm->caller = pmd_empty_section_gap;
 	vm_area_add_early(vm);
 }
@@ -924,7 +924,7 @@ static void __init fill_pmd_gaps(void)
 
 	/* we're still single threaded hence no lock needed here */
 	for (vm = vmlist; vm; vm = vm->next) {
-		if (!(vm->flags & (VM_ARM_STATIC_MAPPING | VM_ARM_EMPTY_MAPPING)))
+		if (!(vm->flags & VM_ARM_STATIC_MAPPING))
 			continue;
 		addr = (unsigned long)vm->addr;
 		if (addr < next)
@@ -1248,6 +1248,7 @@ static void __init devicemaps_init(struct machine_desc *mdesc)
 	if (mdesc->map_io)
 		mdesc->map_io();
 	fill_pmd_gaps();
+<<<<<<< HEAD
 
 	if (use_user_accessible_timers()) {
 		/*
@@ -1262,6 +1263,8 @@ static void __init devicemaps_init(struct machine_desc *mdesc)
 			create_mapping(&map);
 		}
 	}
+=======
+>>>>>>> v3.4.5
 
 	/*
 	 * Finally flush the caches and tlb to ensure that we're in a
