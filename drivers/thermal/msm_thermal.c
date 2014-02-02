@@ -831,55 +831,6 @@ set_threshold_exit:
 }
 
 #ifdef CONFIG_SMP
-static void __ref do_core_control(long temp)
-{
-	int i = 0;
-	int ret = 0;
-
-	if (!core_control_enabled)
-		return;
-
-	mutex_lock(&core_control_mutex);
-	if (msm_thermal_info.core_control_mask &&
-		temp >= msm_thermal_info.core_limit_temp_degC) {
-		for (i = num_possible_cpus(); i > 0; i--) {
-			if (!(msm_thermal_info.core_control_mask & BIT(i)))
-				continue;
-			if (cpus_offlined & BIT(i) && !cpu_online(i))
-				continue;
-			pr_info("%s: Set Offline: CPU%d Temp: %ld\n",
-					KBUILD_MODNAME, i, temp);
-			ret = cpu_down(i);
-			if (ret)
-				pr_err("%s: Error %d offline core %d\n",
-					KBUILD_MODNAME, ret, i);
-			cpus_offlined |= BIT(i);
-			break;
-		}
-	} else if (msm_thermal_info.core_control_mask && cpus_offlined &&
-		temp <= (msm_thermal_info.core_limit_temp_degC -
-			msm_thermal_info.core_temp_hysteresis_degC)) {
-		for (i = 0; i < num_possible_cpus(); i++) {
-			if (!(cpus_offlined & BIT(i)))
-				continue;
-			cpus_offlined &= ~BIT(i);
-			pr_info("%s: Allow Online CPU%d Temp: %ld\n",
-					KBUILD_MODNAME, i, temp);
-			/*
-			 * If this core is already online, then bring up the
-			 * next offlined core.
-			 */
-			if (cpu_online(i))
-				continue;
-			ret = cpu_up(i);
-			if (ret)
-				pr_err("%s: Error %d online core %d\n",
-						KBUILD_MODNAME, ret, i);
-			break;
-		}
-	}
-	mutex_unlock(&core_control_mutex);
-}
 /* Call with core_control_mutex locked */
 static int __ref update_offline_cores(int val)
 {
